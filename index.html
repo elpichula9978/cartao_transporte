@@ -1,0 +1,226 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <title>Gerador de Cartão</title>
+  <style type="text/css">
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+      font-family: Arial, sans-serif;
+      color: #000;
+    }
+
+    body {
+      background-color: #e9ecef;
+    }
+
+    .center {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      min-height: 100vh;
+    }
+
+    #infoForm {
+      background-color: #fff;
+      padding: 20px;
+      margin-bottom: 20px;
+      border-radius: 8px;
+      box-shadow: 0px 0px 5px 0px #0000001a;
+    }
+
+    label,
+    input,
+    button {
+      display: block;
+      width: 100%;
+      margin-bottom: 10px;
+    }
+
+    input,
+    button {
+      padding: 10px;
+      border-radius: 5px;
+    }
+
+    button {
+      background-color: #007bff;
+      color: white;
+      cursor: pointer;
+      width: 150px;
+      /* ajuste conforme sua necessidade */
+      padding: 8px;
+      /* ajuste conforme sua necessidade */
+      font-size: 14px;
+      /* ajuste conforme sua necessidade */
+
+    }
+
+    button:hover {
+      background-color: #0fa4be;
+    }
+
+    @page {
+      margin: 0 0 !important;
+      size: 86mm 54mm !important;
+    }
+
+    .container__infos {
+      display: flex;
+      align-items: center;
+      background-color: white;
+      padding: 10px;
+      border-radius: 8px;
+      box-shadow: 0px 0px 5px 0px #0000001a;
+    }
+
+    .container__infos img {
+      width: 65px;
+      height: 82px;
+    }
+
+    .container__infos div {
+      margin-left: 50px;
+
+    }
+
+    .container__infos h2 {
+      margin-bottom: 0px;
+      /* Ajuste conforme sua necessidade */
+    }
+
+    .container__infos h2,
+    .container__infos h3 {
+      font-weight: 100;
+      font-size: 15px;
+      line-height: 60px;
+      text-transform: uppercase;
+    }
+
+    @media print {
+
+      .container__infos h2,
+      .container__infos h3 {
+        line-height: 40px;
+        /* Ajuste conforme sua necessidade */
+      }
+
+      #infoForm,
+      button {
+        display: none;
+      }
+
+      #userImg {
+        position: absolute;
+        top: 17mm;
+        left: 7mm;
+      }
+
+      .container__infos h2 {
+        font-size: 15px !important;
+        margin-top: -20px;
+        margin-left: -5px;
+        line-height: 20px;
+      }
+
+      .container__infos h3 {
+        font-size: 18px !important;
+        margin-left: -5px;
+      }
+
+      .container__infos {
+        display: flex;
+        box-shadow: none;
+      }
+
+    }
+  </style>
+</head>
+
+<body>
+  <div class="center">
+    <form id="infoForm">
+      <label for="name">Nome:</label>
+      <input type="text" id="name" required>
+      <label for="cpf">CPF:</label>
+      <input type="text" id="cpf" required maxlength="14" oninput="maskCPF()">
+      <label for="img">Foto:</label>
+      <input type="file" id="img" accept="image/*">
+      <button type="button" onclick="generateCard()">Gerar Cartão</button>
+    </form>
+
+    <div class="container__infos">
+      <div>
+        <img id="userImg" src="./foto-usuario.jpg" alt="Avatar usuário(a)">
+      </div>
+      <div>
+        <h2 id="userName">Nome do cliente</h2>
+        <h3 id="userCpf">CPF: 000.000.000-00</h3>
+      </div>
+    </div>
+    <button onclick="window.print();">Imprimir Cartão</button>
+  </div>
+
+  <script>
+    function maskCPF() {
+      const cpf = document.getElementById('cpf');
+      let value = cpf.value;
+      value = value.replace(/\D/g, "");
+      value = value.replace(/(\d{3})(\d)/, "$1.$2");
+      value = value.replace(/(\d{3})(\d)/, "$1.$2");
+      value = value.replace(/(\d{3})(\d{2})$/, "$1-$2");
+      cpf.value = value;
+    }
+
+    function validateCPF(cpf) {
+      cpf = cpf.replace(/[^\d]+/g, '');
+      if (cpf === '') return false;
+      if (cpf.length !== 11) return false;
+
+      if (cpf === "00000000000" || cpf === "11111111111" ||
+        cpf === "22222222222" || cpf === "33333333333" ||
+        cpf === "44444444444" || cpf === "55555555555" ||
+        cpf === "66666666666" || cpf === "77777777777" ||
+        cpf === "88888888888" || cpf === "99999999999")
+        return false;
+
+      let add = 0;
+      for (let i = 0; i < 9; i++)
+        add += parseInt(cpf.charAt(i)) * (10 - i);
+      let rev = 11 - (add % 11);
+      if (rev === 10 || rev === 11) rev = 0;
+      if (rev !== parseInt(cpf.charAt(9))) return false;
+
+      add = 0;
+      for (let i = 0; i < 10; i++) add += parseInt(cpf.charAt(i)) * (11 - i);
+      rev = 11 - (add % 11);
+      if (rev === 10 || rev === 11) rev = 0;
+      if (rev !== parseInt(cpf.charAt(10))) return false;
+
+      return true;
+    }
+
+    function generateCard() {
+      const name = document.getElementById('name').value;
+      const cpf = document.getElementById('cpf').value;
+      const img = document.getElementById('img').files[0];
+
+      document.getElementById('userName').textContent = name || 'Nome Não Informado';
+      document.getElementById('userCpf').textContent = validateCPF(cpf) ? 'CPF: ' + cpf : 'CPF Não Informado ou Inválido';
+
+      if (img) {
+        const reader = new FileReader();
+        reader.onload = function (e) {
+          document.getElementById('userImg').src = e.target.result;
+        };
+        reader.readAsDataURL(img);
+      }
+    }
+  </script>
+</body>
+
+</html>
